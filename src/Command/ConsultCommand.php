@@ -54,7 +54,7 @@ class ConsultCommand extends Command
             $query = $this->entityManager->createQueryBuilder('h')
             ->where('h.tentativas <'.$param)
             ->orderBy('h.tentativas', 'ASC')->getQuery();
-            $resul= $query->getResult()->paginate();
+            $resul= $query->getResult();
         }else{
             $query = $this->entityManager->createQueryBuilder('h')
             ->orderBy('h.hash', 'ASC')->getQuery();

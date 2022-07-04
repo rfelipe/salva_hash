@@ -27,7 +27,7 @@ class TestCommand extends Command
         $this->entityManager= $entityManager;
         $this->SaveController=$savecontroller;
         // you *must* call the parent constructor
-        ini_set('memory_limit', '2000M');
+        ini_set('memory_limit', '-1');
         parent::__construct();
     }
 
@@ -50,8 +50,7 @@ class TestCommand extends Command
                 InputOption::VALUE_REQUIRED,
                 'How many times should the execute?',
                 1
-            )
-        ;
+            );
     }
 
     function getRandom($length){
@@ -69,46 +68,60 @@ class TestCommand extends Command
         return $result;
     }
 
+
+    public function consulta($filtro){
+        $filtro;
+
+        $query = $this->entityManager->createQueryBuilder('h')->orderBy('h.hash', 'ASC')->getQuery();
+        $resul= $query->getResult();
+
+         foreach($resul as $values){
+             $output->writeln('data: ' . date_format($values->getBatch(),"Y/m/d H:i:s") 
+                             .'Entrda: ' .$values->getEntrada()
+                             .'Hash: ' .$values->getHash()
+                             .'key: ' .$values->getChave()
+                             .'Tentativas: ' .$valuesgetTentativas()
+                         );
+         }
+    }
+
     public function execute(InputInterface $input, OutputInterface $output)
     {
-        $hashguard = new SaveHash;
-        $repeat = $input->getOption('requests');
-        $hash_name= $input->getArgument('hash');
-
-        for($i=0;$i<$repeat;$i++){
-            $tentativas=0;
+            $hashguard = new SaveHash;
+            $repeat = $input->getOption('requests');
+            $hash_name= $input->getArgument('hash');
             $key = $this->getRandom(8);
-            $Hash =md5( $hash_name. $key  );
-
-
-            while(substr($Hash, 0, 4)!=="0000"){
-                
-                $Hash = md5($hash_name . $key);
-                $key .= $key;
-                $tentativas++;
-                
+    
+            for($i=0;$i<$repeat;$i++){
+                $tentativas=0;
+                $Hash ='';
+    
+                while(substr($Hash, 0, 4)!=="0000"){
+                    $Hash = md5($hash_name . $key);
+                    $key = $this->getRandom(8);
+                    $tentativas++;
+                    $output->writeln(' hash '.$Hash);
+                }
+    
+                $hashguard->setBatch(new \DateTime());
+                $hashguard->setEntrada($hash_name);
+                $hashguard->setChave($key);
+                $hashguard->setHash($Hash);
+                $hashguard->setTentativas($tentativas);
+                $this->SaveController->index($hashguard);
+    
+                $hash_name= $hash_name;
+                $salvos[]=$hashguard;
             }
-
-            $hashguard->setBatch(new \DateTime());
-            $hashguard->setEntrada($hash_name);
-            $hashguard->setChave($key);
-            $hashguard->setHash($Hash);
-            $hashguard->setTentativas($tentativas);
-            $this->SaveController->index($hashguard);
-
-            $hash_name= $hash_name;
-            $salvos[]=$hashguard;
-        }
-
-        foreach($salvos as $values){
-            $output->writeln('data: ' .$values->getBatch() 
-                            .'Entrda: ' .$values->getEntrada()
-                            .'Hash: ' .$values->getHash()
-                            .'key: ' .$values->getChave()
-                            .'Tentativas: ' .$valuesgetTentativas()
-                        );
-        }
-        
+    
+            foreach($salvos as $values){
+                $output->writeln('data: ' . date_format($values->getBatch(),"Y/m/d H:i:s") 
+                                .'Entrda: ' .$values->getEntrada()
+                                .'Hash: ' .$values->getHash()
+                                .'key: ' .$values->getChave()
+                                .'Tentativas: ' .$valuesgetTentativas()
+                            );
+            }
 
         return Command::SUCCESS;
     }

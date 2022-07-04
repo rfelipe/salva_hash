@@ -7,9 +7,11 @@ Rodar projeto
    
 
 
-salvar dados:
+--salvar dados:
 php bin/console app:test `string` --requests=0
 
+--consultar menor tentativas
+php bin/console app:consult `numero`
 
 Executar server:
 symfony server:start
